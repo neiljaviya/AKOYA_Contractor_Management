@@ -4,84 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Akoya Contractor Scheduler</title>
-  <meta name="description" content="Contractor scheduling calendar for Akoya Living - 55 Broadway Avenue">
   
   <!-- React 18 -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Babel for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
-  <!-- Firebase v9 Compat (works with script tags) -->
+  <!-- Firebase Compat -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <style>
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+      font-family: 'DM Sans', -apple-system, sans-serif;
     }
-    
-    #root {
-      min-height: 100vh;
-    }
-    
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    
     @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div id="root">
-    <!-- Loading state -->
-    <div style="
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      font-family: 'DM Sans', sans-serif;
-    ">
-      <div style="
-        background: white;
-        border-radius: 20px;
-        padding: 3rem;
-        text-align: center;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-      ">
-        <div style="
-          width: 50px;
-          height: 50px;
-          border: 4px solid #e2e8f0;
-          border-top-color: #667eea;
-          border-radius: 50%;
-          margin: 0 auto 1rem;
-          animation: spin 1s linear infinite;
-        "></div>
-        <p style="margin: 0; color: #64748b; font-size: 1.1rem;">Loading app...</p>
-      </div>
-    </div>
-  </div>
+  <div id="root"></div>
   
-  <!-- Main App Script -->
-  <script>
+  <script type="text/babel">
     // Firebase Configuration - REPLACE WITH YOUR CREDENTIALS
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY_HERE",
@@ -96,7 +53,72 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // React App Component
+    // Icons as SVG components
+    const Calendar = ({ size = 24, color = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+    );
+
+    const Plus = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    );
+
+    const X = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    );
+
+    const ChevronLeft = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    );
+
+    const ChevronRight = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    );
+
+    const User = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    );
+
+    const Building = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+        <path d="M9 22v-4h6v4"></path>
+        <path d="M8 6h.01"></path>
+        <path d="M16 6h.01"></path>
+        <path d="M12 6h.01"></path>
+        <path d="M12 10h.01"></path>
+        <path d="M12 14h.01"></path>
+        <path d="M16 10h.01"></path>
+        <path d="M16 14h.01"></path>
+        <path d="M8 10h.01"></path>
+        <path d="M8 14h.01"></path>
+      </svg>
+    );
+
+    const Clock = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+    );
+
     function ContractorScheduler() {
       const [activeTab, setActiveTab] = React.useState('schedule');
       const [calendarView, setCalendarView] = React.useState('weekly');
@@ -115,39 +137,32 @@
         notes: ''
       });
 
-      // Real-time listener for schedules
+      // Real-time listener
       React.useEffect(() => {
         const unsubscribe = db.collection('schedules')
           .orderBy('date', 'asc')
           .onSnapshot(
             (snapshot) => {
-              const schedulesData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-              }));
-              setSchedules(schedulesData);
+              const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              setSchedules(data);
               setIsLoading(false);
               setIsOnline(true);
             },
             (error) => {
-              console.error('Error fetching schedules:', error);
+              console.error('Error:', error);
               setIsOnline(false);
               setIsLoading(false);
-              alert('Error connecting to database. Please check your Firebase configuration.');
             }
           );
-
         return () => unsubscribe();
       }, []);
 
-      // Monitor online/offline status
+      // Online/offline
       React.useEffect(() => {
         const handleOnline = () => setIsOnline(true);
         const handleOffline = () => setIsOnline(false);
-        
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
-        
         return () => {
           window.removeEventListener('online', handleOnline);
           window.removeEventListener('offline', handleOffline);
@@ -156,13 +171,11 @@
 
       const handleSubmit = async (e) => {
         e.preventDefault();
-        
         try {
           await db.collection('schedules').add({
             ...formData,
             createdAt: new Date().toISOString()
           });
-          
           setFormData({
             contractorName: '',
             locationType: 'unit',
@@ -172,21 +185,20 @@
             toTime: '17:00',
             notes: ''
           });
-          
-          alert('Schedule added successfully!');
+          alert('Schedule added!');
         } catch (error) {
-          console.error('Error adding schedule:', error);
+          console.error('Error:', error);
           alert('Error adding schedule: ' + error.message);
         }
       };
 
       const deleteSchedule = async (id) => {
-        if (window.confirm('Are you sure you want to delete this schedule?')) {
+        if (window.confirm('Delete this schedule?')) {
           try {
             await db.collection('schedules').doc(id).delete();
           } catch (error) {
-            console.error('Error deleting schedule:', error);
-            alert('Error deleting schedule: ' + error.message);
+            console.error('Error:', error);
+            alert('Error deleting: ' + error.message);
           }
         }
       };
@@ -204,268 +216,279 @@
         return `${displayHour}:${minutes} ${ampm}`;
       };
 
+      const getDaysInMonth = (date) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        return {
+          daysInMonth: lastDay.getDate(),
+          startingDayOfWeek: firstDay.getDay(),
+          year,
+          month
+        };
+      };
+
+      const getWeekDays = (date) => {
+        const day = date.getDay();
+        const diff = date.getDate() - day;
+        const sunday = new Date(date);
+        sunday.setDate(diff);
+        
+        return Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(sunday);
+          d.setDate(sunday.getDate() + i);
+          return d;
+        });
+      };
+
       if (isLoading) {
-        return React.createElement('div', {
-          style: {
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }
-        },
-          React.createElement('div', {
-            style: {
-              background: 'white',
-              borderRadius: '20px',
-              padding: '3rem',
-              textAlign: 'center',
-              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)'
-            }
-          },
-            React.createElement('div', {
-              style: {
-                width: '50px',
-                height: '50px',
-                border: '4px solid #e2e8f0',
-                borderTopColor: '#667eea',
-                borderRadius: '50%',
-                margin: '0 auto 1rem',
-                animation: 'spin 1s linear infinite'
-              }
-            }),
-            React.createElement('p', {
-              style: { margin: 0, color: '#64748b', fontSize: '1.1rem' }
-            }, 'Loading schedules...')
-          )
+        return (
+          <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ background: 'white', borderRadius: '20px', padding: '3rem', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+              <div style={{ width: '50px', height: '50px', border: '4px solid #e2e8f0', borderTopColor: '#667eea', borderRadius: '50%', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }}></div>
+              <p style={{ margin: 0, color: '#64748b', fontSize: '1.1rem' }}>Loading schedules...</p>
+            </div>
+          </div>
         );
       }
 
-      return React.createElement('div', {
-        style: {
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          padding: '2rem',
-          fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif"
-        }
-      },
-        React.createElement('h1', {
-          style: {
-            textAlign: 'center',
-            color: 'white',
-            marginBottom: '2rem',
-            fontSize: '2.5rem'
-          }
-        }, 'Contractor Schedule Manager'),
-        
-        React.createElement('div', {
-          style: {
-            maxWidth: '1200px',
-            margin: '0 auto',
-            background: 'white',
-            borderRadius: '20px',
-            padding: '2rem',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)'
-          }
-        },
-          React.createElement('div', {
-            style: {
-              position: 'absolute',
-              top: '1rem',
-              right: '1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.5rem 1rem',
-              borderRadius: '20px',
-              background: isOnline ? '#dcfce7' : '#fee2e2',
-              color: isOnline ? '#16a34a' : '#dc2626',
-              fontSize: '0.85rem',
-              fontWeight: '600'
-            }
-          }, isOnline ? '● Connected' : '● Offline'),
-          
-          React.createElement('h2', {
-            style: { marginTop: 0, color: '#1e293b' }
-          }, 'Today\'s Schedule'),
-          
-          React.createElement('div', {
-            style: {
-              display: 'grid',
-              gap: '1rem',
-              marginBottom: '2rem'
-            }
-          },
-            getSchedulesForDate(new Date()).length === 0 ?
-              React.createElement('p', {
-                style: { textAlign: 'center', color: '#94a3b8', padding: '2rem' }
-              }, 'No contractors scheduled for today')
-            :
-              getSchedulesForDate(new Date()).map(schedule =>
-                React.createElement('div', {
-                  key: schedule.id,
-                  style: {
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    padding: '1.5rem',
-                    borderRadius: '12px',
-                    position: 'relative'
-                  }
-                },
-                  React.createElement('button', {
-                    onClick: () => deleteSchedule(schedule.id),
-                    style: {
-                      position: 'absolute',
-                      top: '1rem',
-                      right: '1rem',
-                      background: 'rgba(255, 255, 255, 0.2)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '0.5rem',
-                      cursor: 'pointer',
-                      color: 'white',
-                      fontSize: '1.2rem'
-                    }
-                  }, '×'),
-                  React.createElement('h3', {
-                    style: { margin: '0 0 0.5rem 0' }
-                  }, schedule.contractorName),
-                  React.createElement('div', null,
-                    formatTime(schedule.fromTime) + ' - ' + formatTime(schedule.toTime)
-                  ),
-                  React.createElement('div', null,
-                    schedule.locationType === 'building' ? 'Entire Building' : `Unit ${schedule.unitNumbers}`
-                  ),
-                  schedule.notes && React.createElement('div', {
-                    style: { marginTop: '0.5rem', opacity: 0.9, fontSize: '0.9rem' }
-                  }, schedule.notes)
-                )
-              )
-          ),
-          
-          React.createElement('h3', { style: { color: '#1e293b' } }, 'Add New Schedule'),
-          
-          React.createElement('form', { onSubmit: handleSubmit, style: { display: 'grid', gap: '1rem' } },
-            React.createElement('input', {
-              type: 'text',
-              placeholder: 'Contractor Name',
-              required: true,
-              value: formData.contractorName,
-              onChange: (e) => setFormData({...formData, contractorName: e.target.value}),
-              style: {
-                padding: '0.875rem',
-                border: '2px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '1rem'
-              }
-            }),
-            
-            React.createElement('select', {
-              value: formData.locationType,
-              onChange: (e) => setFormData({...formData, locationType: e.target.value}),
-              style: {
-                padding: '0.875rem',
-                border: '2px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '1rem'
-              }
-            },
-              React.createElement('option', { value: 'unit' }, 'Specific Unit(s)'),
-              React.createElement('option', { value: 'building' }, 'Entire Building')
-            ),
-            
-            formData.locationType === 'unit' && React.createElement('input', {
-              type: 'text',
-              placeholder: 'Unit Number(s) - e.g., 1804 or 201, 301',
-              required: true,
-              value: formData.unitNumbers,
-              onChange: (e) => setFormData({...formData, unitNumbers: e.target.value}),
-              style: {
-                padding: '0.875rem',
-                border: '2px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '1rem'
-              }
-            }),
-            
-            React.createElement('input', {
-              type: 'date',
-              required: true,
-              value: formData.date,
-              onChange: (e) => setFormData({...formData, date: e.target.value}),
-              style: {
-                padding: '0.875rem',
-                border: '2px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '1rem'
-              }
-            }),
-            
-            React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' } },
-              React.createElement('input', {
-                type: 'time',
-                required: true,
-                value: formData.fromTime,
-                onChange: (e) => setFormData({...formData, fromTime: e.target.value}),
-                style: {
-                  padding: '0.875rem',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '8px',
-                  fontSize: '1rem'
-                }
-              }),
-              React.createElement('input', {
-                type: 'time',
-                required: true,
-                value: formData.toTime,
-                onChange: (e) => setFormData({...formData, toTime: e.target.value}),
-                style: {
-                  padding: '0.875rem',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '8px',
-                  fontSize: '1rem'
-                }
-              })
-            ),
-            
-            React.createElement('textarea', {
-              placeholder: 'Additional notes (optional)',
-              value: formData.notes,
-              onChange: (e) => setFormData({...formData, notes: e.target.value}),
-              rows: 3,
-              style: {
-                padding: '0.875rem',
-                border: '2px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                fontFamily: 'inherit',
-                resize: 'vertical'
-              }
-            }),
-            
-            React.createElement('button', {
-              type: 'submit',
-              disabled: !isOnline,
-              style: {
-                padding: '1rem',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                fontWeight: '600',
-                cursor: isOnline ? 'pointer' : 'not-allowed',
-                background: isOnline ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#94a3b8',
-                color: 'white',
-                opacity: isOnline ? 1 : 0.6
-              }
-            }, isOnline ? 'Add Schedule' : 'Offline - Cannot Add')
-          )
-        )
+      return (
+        <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '2rem', fontFamily: "'DM Sans', sans-serif" }}>
+          {/* Header */}
+          <div style={{ maxWidth: '1400px', margin: '0 auto 2rem' }}>
+            <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2rem 2.5rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', position: 'relative' }}>
+              <div style={{ position: 'absolute', top: '2rem', right: '2.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '20px', background: isOnline ? '#dcfce7' : '#fee2e2', color: isOnline ? '#16a34a' : '#dc2626', fontSize: '0.85rem', fontWeight: '600' }}>
+                ● {isOnline ? 'Connected' : 'Offline'}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                <Calendar size={32} color="#667eea" />
+                <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: '700', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  Contractor Schedule Manager
+                </h1>
+              </div>
+              <p style={{ margin: 0, color: '#64748b', fontSize: '0.95rem' }}>Akoya Living - 55 Broadway Avenue</p>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div style={{ maxWidth: '1400px', margin: '0 auto 1.5rem' }}>
+            <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '16px', padding: '0.5rem', display: 'inline-flex', gap: '0.5rem', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+              <button onClick={() => setActiveTab('schedule')} style={{ padding: '0.75rem 2rem', border: 'none', borderRadius: '12px', fontSize: '0.95rem', fontWeight: '600', cursor: 'pointer', background: activeTab === 'schedule' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent', color: activeTab === 'schedule' ? 'white' : '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Plus size={18} /> Schedule Contractor
+              </button>
+              <button onClick={() => setActiveTab('calendar')} style={{ padding: '0.75rem 2rem', border: 'none', borderRadius: '12px', fontSize: '0.95rem', fontWeight: '600', cursor: 'pointer', background: activeTab === 'calendar' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent', color: activeTab === 'calendar' ? 'white' : '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Calendar size={18} /> View Calendar
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+            {activeTab === 'schedule' ? (
+              <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2.5rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+                <h2 style={{ marginTop: 0, marginBottom: '2rem', fontSize: '1.5rem', fontWeight: '700', color: '#1e293b' }}>Add New Schedule</h2>
+                <form onSubmit={handleSubmit}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                    <div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>
+                        <User size={16} /> Contractor Name
+                      </label>
+                      <input type="text" required value={formData.contractorName} onChange={e => setFormData({...formData, contractorName: e.target.value})} placeholder="Enter contractor name" style={{ width: '100%', padding: '0.875rem 1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>
+                        <Building size={16} /> Location Type
+                      </label>
+                      <select value={formData.locationType} onChange={e => setFormData({...formData, locationType: e.target.value})} style={{ width: '100%', padding: '0.875rem 1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem', cursor: 'pointer' }}>
+                        <option value="unit">Specific Unit(s)</option>
+                        <option value="building">Entire Building</option>
+                      </select>
+                    </div>
+                    {formData.locationType === 'unit' && (
+                      <div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>
+                          <Building size={16} /> Unit Number(s)
+                        </label>
+                        <input type="text" required value={formData.unitNumbers} onChange={e => setFormData({...formData, unitNumbers: e.target.value})} placeholder="e.g., 1804 or 201, 301, 401" style={{ width: '100%', padding: '0.875rem 1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem' }} />
+                      </div>
+                    )}
+                    <div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>
+                        <Calendar size={16} /> Date
+                      </label>
+                      <input type="date" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} style={{ width: '100%', padding: '0.875rem 1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>
+                        <Clock size={16} /> From Time
+                      </label>
+                      <input type="time" required value={formData.fromTime} onChange={e => setFormData({...formData, fromTime: e.target.value})} style={{ width: '100%', padding: '0.875rem 1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>
+                        <Clock size={16} /> To Time
+                      </label>
+                      <input type="time" required value={formData.toTime} onChange={e => setFormData({...formData, toTime: e.target.value})} style={{ width: '100%', padding: '0.875rem 1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem' }} />
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '2rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>Additional Notes</label>
+                    <textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Any special instructions..." rows={4} style={{ width: '100%', padding: '1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem', fontFamily: 'inherit', resize: 'vertical' }} />
+                  </div>
+                  <button type="submit" disabled={!isOnline} style={{ padding: '1rem 2.5rem', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: '600', cursor: isOnline ? 'pointer' : 'not-allowed', background: isOnline ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#94a3b8', color: 'white', boxShadow: isOnline ? '0 10px 30px rgba(102,126,234,0.4)' : 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: isOnline ? 1 : 0.6 }}>
+                    <Plus size={20} /> {isOnline ? 'Add Schedule' : 'Offline - Cannot Add'}
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div>
+                {/* Calendar Controls */}
+                <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '16px', padding: '1rem', marginBottom: '1.5rem', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', background: '#f8fafc', padding: '0.25rem', borderRadius: '10px' }}>
+                    {['daily', 'weekly', 'monthly'].map(view => (
+                      <button key={view} onClick={() => setCalendarView(view)} style={{ padding: '0.625rem 1.25rem', border: 'none', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', background: calendarView === view ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent', color: calendarView === view ? 'white' : '#64748b', textTransform: 'capitalize' }}>
+                        {view}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <button onClick={() => {
+                      const newDate = new Date(currentDate);
+                      if (calendarView === 'daily') newDate.setDate(newDate.getDate() - 1);
+                      else if (calendarView === 'weekly') newDate.setDate(newDate.getDate() - 7);
+                      else newDate.setMonth(newDate.getMonth() - 1);
+                      setCurrentDate(newDate);
+                    }} style={{ padding: '0.5rem', border: 'none', borderRadius: '8px', background: '#f8fafc', cursor: 'pointer', display: 'flex' }}>
+                      <ChevronLeft size={20} />
+                    </button>
+                    <div style={{ fontSize: '1rem', fontWeight: '600', color: '#1e293b', minWidth: '180px', textAlign: 'center' }}>
+                      {calendarView === 'monthly' ? currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) :
+                       calendarView === 'weekly' ? `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` :
+                       currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                    </div>
+                    <button onClick={() => {
+                      const newDate = new Date(currentDate);
+                      if (calendarView === 'daily') newDate.setDate(newDate.getDate() + 1);
+                      else if (calendarView === 'weekly') newDate.setDate(newDate.getDate() + 7);
+                      else newDate.setMonth(newDate.getMonth() + 1);
+                      setCurrentDate(newDate);
+                    }} style={{ padding: '0.5rem', border: 'none', borderRadius: '8px', background: '#f8fafc', cursor: 'pointer', display: 'flex' }}>
+                      <ChevronRight size={20} />
+                    </button>
+                    <button onClick={() => setCurrentDate(new Date())} style={{ padding: '0.625rem 1.25rem', border: '2px solid #667eea', borderRadius: '8px', background: 'white', color: '#667eea', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer' }}>
+                      Today
+                    </button>
+                  </div>
+                </div>
+
+                {/* Calendar Views */}
+                <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', minHeight: '600px' }}>
+                  {calendarView === 'daily' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {getSchedulesForDate(currentDate).length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '4rem 2rem', color: '#94a3b8', fontSize: '1.1rem' }}>
+                          <Calendar size={48} color="#94a3b8" style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
+                          <p style={{ margin: 0 }}>No contractors scheduled for this day</p>
+                        </div>
+                      ) : (
+                        getSchedulesForDate(currentDate).map(schedule => (
+                          <div key={schedule.id} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '16px', padding: '1.5rem', color: 'white', position: 'relative', boxShadow: '0 10px 30px rgba(102,126,234,0.3)', animation: 'slideIn 0.3s ease' }}>
+                            <button onClick={() => deleteSchedule(schedule.id)} disabled={!isOnline} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', padding: '0.5rem', cursor: isOnline ? 'pointer' : 'not-allowed', display: 'flex', opacity: isOnline ? 1 : 0.5 }}>
+                              <X size={16} color="white" />
+                            </button>
+                            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem' }}>{schedule.contractorName}</h3>
+                            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                              <div>
+                                <div style={{ opacity: 0.8, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Time</div>
+                                <div style={{ fontSize: '1rem', fontWeight: '600' }}>{formatTime(schedule.fromTime)} - {formatTime(schedule.toTime)}</div>
+                              </div>
+                              <div>
+                                <div style={{ opacity: 0.8, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Location</div>
+                                <div style={{ fontSize: '1rem', fontWeight: '600' }}>{schedule.locationType === 'building' ? 'Entire Building' : `Unit ${schedule.unitNumbers}`}</div>
+                              </div>
+                            </div>
+                            {schedule.notes && (
+                              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
+                                <div style={{ opacity: 0.8, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Notes</div>
+                                <div style={{ fontSize: '0.95rem' }}>{schedule.notes}</div>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {calendarView === 'weekly' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1rem' }}>
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                        <div key={day} style={{ textAlign: 'center', fontWeight: '700', color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{day}</div>
+                      ))}
+                      {getWeekDays(currentDate).map((date, idx) => {
+                        const daySchedules = getSchedulesForDate(date);
+                        const isToday = date.toDateString() === new Date().toDateString();
+                        return (
+                          <div key={idx} style={{ background: isToday ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f8fafc', borderRadius: '12px', padding: '1rem', minHeight: '120px', color: isToday ? 'white' : '#1e293b' }}>
+                            <div style={{ fontWeight: '700', marginBottom: '0.75rem', fontSize: '1.1rem' }}>{date.getDate()}</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              {daySchedules.slice(0, 2).map(schedule => (
+                                <div key={schedule.id} style={{ background: isToday ? 'rgba(255,255,255,0.2)' : 'white', padding: '0.5rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', border: isToday ? 'none' : '2px solid #e2e8f0' }}>
+                                  {schedule.contractorName}
+                                </div>
+                              ))}
+                              {daySchedules.length > 2 && (
+                                <div style={{ fontSize: '0.75rem', fontWeight: '600', opacity: 0.7 }}>+{daySchedules.length - 2} more</div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {calendarView === 'monthly' && (
+                    <div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                          <div key={day} style={{ textAlign: 'center', fontWeight: '700', color: '#64748b', fontSize: '0.85rem', padding: '0.5rem' }}>{day}</div>
+                        ))}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem' }}>
+                        {(() => {
+                          const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(currentDate);
+                          const days = [];
+                          for (let i = 0; i < startingDayOfWeek; i++) days.push(<div key={`empty-${i}`} />);
+                          for (let day = 1; day <= daysInMonth; day++) {
+                            const date = new Date(year, month, day);
+                            const daySchedules = getSchedulesForDate(date);
+                            const isToday = date.toDateString() === new Date().toDateString();
+                            days.push(
+                              <div key={day} onClick={() => { if (daySchedules.length > 0) { setCurrentDate(date); setCalendarView('daily'); } }} style={{ background: isToday ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f8fafc', borderRadius: '12px', padding: '0.75rem', minHeight: '80px', color: isToday ? 'white' : '#1e293b', cursor: daySchedules.length > 0 ? 'pointer' : 'default' }}>
+                                <div style={{ fontWeight: '700', marginBottom: '0.5rem' }}>{day}</div>
+                                {daySchedules.length > 0 && (
+                                  <div style={{ background: isToday ? 'rgba(255,255,255,0.3)' : '#667eea', color: 'white', borderRadius: '6px', padding: '0.25rem 0.5rem', fontSize: '0.7rem', fontWeight: '600', textAlign: 'center' }}>
+                                    {daySchedules.length} {daySchedules.length === 1 ? 'schedule' : 'schedules'}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                          return days;
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       );
     }
 
-    // Render the app
     const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(React.createElement(ContractorScheduler));
+    root.render(<ContractorScheduler />);
   </script>
 </body>
 </html>
