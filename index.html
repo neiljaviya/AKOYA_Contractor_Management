@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Akoya Contractor Scheduler</title>
+  <title>Akoya Contractor Management</title>
   
   <!-- React 18 -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -16,6 +16,12 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   
+  <!-- PapaParse for CSV -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  
+  <!-- SheetJS for Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
@@ -25,6 +31,8 @@
       margin: 0;
       padding: 0;
       font-family: 'DM Sans', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
     }
     @keyframes spin {
       to { transform: rotate(360deg); }
@@ -39,7 +47,7 @@
   <div id="root"></div>
   
   <script type="text/babel">
-    // Firebase Configuration - REPLACE WITH YOUR CREDENTIALS
+    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCyF9zUCTlh7kzm1Su4k54pCzypnpgpF68",
       authDomain: "akoya-contractor-management.firebaseapp.com",
@@ -89,6 +97,18 @@
       </svg>
     );
 
+    const ChevronDown = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    );
+
+    const ChevronUp = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    );
+
     const User = ({ size = 24 }) => (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -119,14 +139,78 @@
       </svg>
     );
 
-    function ContractorScheduler() {
+    const Upload = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+      </svg>
+    );
+
+    const Download = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+    );
+
+    const Search = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+    );
+
+    const Filter = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+      </svg>
+    );
+
+    const LogIn = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+        <polyline points="10 17 15 12 10 7"></polyline>
+        <line x1="15" y1="12" x2="3" y2="12"></line>
+      </svg>
+    );
+
+    const LogOut = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+    );
+
+    const Phone = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+      </svg>
+    );
+
+    const FileText = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+    );
+
+    function ContractorManagement() {
       const [activeTab, setActiveTab] = React.useState('schedule');
       const [calendarView, setCalendarView] = React.useState('weekly');
       const [currentDate, setCurrentDate] = React.useState(new Date());
       const [schedules, setSchedules] = React.useState([]);
+      const [signIns, setSignIns] = React.useState([]);
+      const [workOrders, setWorkOrders] = React.useState([]);
       const [isOnline, setIsOnline] = React.useState(true);
       const [isLoading, setIsLoading] = React.useState(true);
       
+      // Schedule form data
       const [formData, setFormData] = React.useState({
         contractorName: '',
         locationType: 'unit',
@@ -137,27 +221,53 @@
         notes: ''
       });
 
-      // Real-time listener
+      // Sign-in form data
+      const [signInForm, setSignInForm] = React.useState({
+        name: '',
+        company: '',
+        phone: '',
+        date: new Date().toISOString().split('T')[0],
+        checkInTime: '',
+        checkOutTime: ''
+      });
+
+      // Work orders filters
+      const [workOrderFilters, setWorkOrderFilters] = React.useState({
+        status: 'all',
+        unit: '',
+        category: 'all',
+        dateFrom: '',
+        dateTo: '',
+        search: ''
+      });
+      const [sortConfig, setSortConfig] = React.useState({ key: 'created', direction: 'desc' });
+      const [showFilters, setShowFilters] = React.useState(false);
+
+      // Real-time listeners
       React.useEffect(() => {
-        const unsubscribe = db.collection('schedules')
-          .orderBy('date', 'asc')
-          .onSnapshot(
-            (snapshot) => {
-              const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-              setSchedules(data);
-              setIsLoading(false);
-              setIsOnline(true);
-            },
-            (error) => {
-              console.error('Error:', error);
-              setIsOnline(false);
-              setIsLoading(false);
-            }
-          );
-        return () => unsubscribe();
+        const unsubscribeSchedules = db.collection('schedules').orderBy('date', 'asc').onSnapshot(
+          snapshot => {
+            const schedulesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setSchedules(schedulesData);
+            setIsLoading(false);
+          },
+          error => { console.error('Schedule sync error:', error); setIsLoading(false); }
+        );
+
+        const unsubscribeSignIns = db.collection('signIns').orderBy('date', 'desc').orderBy('checkInTime', 'desc').onSnapshot(
+          snapshot => {
+            const signInsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setSignIns(signInsData);
+          },
+          error => { console.error('Sign-in sync error:', error); }
+        );
+
+        return () => {
+          unsubscribeSchedules();
+          unsubscribeSignIns();
+        };
       }, []);
 
-      // Online/offline
       React.useEffect(() => {
         const handleOnline = () => setIsOnline(true);
         const handleOffline = () => setIsOnline(false);
@@ -169,51 +279,98 @@
         };
       }, []);
 
-      const handleSubmit = async (e) => {
+      // Schedule functions
+      const handleScheduleSubmit = async (e) => {
         e.preventDefault();
+        if (!isOnline) { alert('Cannot add schedule while offline'); return; }
         try {
-          await db.collection('schedules').add({
-            ...formData,
-            createdAt: new Date().toISOString()
-          });
-          setFormData({
-            contractorName: '',
-            locationType: 'unit',
-            unitNumbers: '',
-            date: new Date().toISOString().split('T')[0],
-            fromTime: '09:00',
-            toTime: '17:00',
-            notes: ''
-          });
-          alert('Schedule added!');
-        } catch (error) {
-          console.error('Error:', error);
-          alert('Error adding schedule: ' + error.message);
-        }
+          await db.collection('schedules').add({ ...formData, createdAt: new Date().toISOString() });
+          setFormData({ contractorName: '', locationType: 'unit', unitNumbers: '', date: new Date().toISOString().split('T')[0], fromTime: '09:00', toTime: '17:00', notes: '' });
+        } catch (error) { console.error('Error adding schedule:', error); }
       };
 
       const deleteSchedule = async (id) => {
-        if (window.confirm('Delete this schedule?')) {
-          try {
-            await db.collection('schedules').doc(id).delete();
-          } catch (error) {
-            console.error('Error:', error);
-            alert('Error deleting: ' + error.message);
-          }
+        if (!isOnline) { alert('Cannot delete schedule while offline'); return; }
+        if (!confirm('Delete this schedule?')) return;
+        try { await db.collection('schedules').doc(id).delete(); } 
+        catch (error) { console.error('Error deleting schedule:', error); }
+      };
+
+      // Sign-in functions
+      const handleSignInSubmit = async (e) => {
+        e.preventDefault();
+        if (!isOnline) { alert('Cannot add sign-in while offline'); return; }
+        try {
+          await db.collection('signIns').add({ ...signInForm, createdAt: new Date().toISOString() });
+          setSignInForm({ name: '', company: '', phone: '', date: new Date().toISOString().split('T')[0], checkInTime: '', checkOutTime: '' });
+        } catch (error) { console.error('Error adding sign-in:', error); }
+      };
+
+      const deleteSignIn = async (id) => {
+        if (!isOnline) { alert('Cannot delete sign-in while offline'); return; }
+        if (!confirm('Delete this sign-in entry?')) return;
+        try { await db.collection('signIns').doc(id).delete(); } 
+        catch (error) { console.error('Error deleting sign-in:', error); }
+      };
+
+      const exportSignIns = () => {
+        const ws = XLSX.utils.json_to_sheet(signIns.map(s => ({
+          Name: s.name,
+          Company: s.company,
+          Phone: s.phone,
+          Date: s.date,
+          'Check-In Time': s.checkInTime,
+          'Check-Out Time': s.checkOutTime || 'Still on-site'
+        })));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sign-Ins");
+        XLSX.writeFile(wb, `contractor_sign_ins_${new Date().toISOString().split('T')[0]}.xlsx`);
+      };
+
+      // Work Orders functions
+      const handleWorkOrdersUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          Papa.parse(file, {
+            header: true,
+            complete: (results) => {
+              setWorkOrders(results.data.filter(row => row['Service Number']));
+            }
+          });
         }
+      };
+
+      const exportWorkOrders = () => {
+        const ws = XLSX.utils.json_to_sheet(filteredWorkOrders);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Work Orders");
+        XLSX.writeFile(wb, `work_orders_${new Date().toISOString().split('T')[0]}.xlsx`);
+      };
+
+      // Utility functions
+      const formatTime = (time) => {
+        const [hours, minutes] = time.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour % 12 || 12;
+        return `${displayHour}:${minutes} ${ampm}`;
       };
 
       const getSchedulesForDate = (date) => {
         const dateStr = date.toISOString().split('T')[0];
-        return schedules.filter(s => s.date === dateStr);
+        return schedules.filter(schedule => schedule.date === dateStr);
       };
 
-      const formatTime = (time) => {
-        const [hours, minutes] = time.split(':');
-        const h = parseInt(hours);
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        const displayHour = h % 12 || 12;
-        return `${displayHour}:${minutes} ${ampm}`;
+      const getWeekDays = (date) => {
+        const week = [];
+        const curr = new Date(date);
+        const first = curr.getDate() - curr.getDay();
+        for (let i = 0; i < 7; i++) {
+          const day = new Date(curr);
+          day.setDate(first + i);
+          week.push(day);
+        }
+        return week;
       };
 
       const getDaysInMonth = (date) => {
@@ -229,266 +386,560 @@
         };
       };
 
-      const getWeekDays = (date) => {
-        const day = date.getDay();
-        const diff = date.getDate() - day;
-        const sunday = new Date(date);
-        sunday.setDate(diff);
-        
-        return Array.from({ length: 7 }, (_, i) => {
-          const d = new Date(sunday);
-          d.setDate(sunday.getDate() + i);
-          return d;
+      // Work Orders filtering
+      const uniqueStatuses = React.useMemo(() => {
+        return [...new Set(workOrders.map(wo => wo.Status).filter(Boolean))];
+      }, [workOrders]);
+
+      const uniqueCategories = React.useMemo(() => {
+        return [...new Set(workOrders.map(wo => wo.Category).filter(Boolean))];
+      }, [workOrders]);
+
+      const filteredWorkOrders = React.useMemo(() => {
+        return workOrders.filter(wo => {
+          if (workOrderFilters.status !== 'all' && wo.Status !== workOrderFilters.status) return false;
+          if (workOrderFilters.unit && !wo['Unit Number']?.includes(workOrderFilters.unit)) return false;
+          if (workOrderFilters.category !== 'all' && wo.Category !== workOrderFilters.category) return false;
+          if (workOrderFilters.dateFrom && new Date(wo.created) < new Date(workOrderFilters.dateFrom)) return false;
+          if (workOrderFilters.dateTo && new Date(wo.created) > new Date(workOrderFilters.dateTo)) return false;
+          if (workOrderFilters.search) {
+            const searchLower = workOrderFilters.search.toLowerCase();
+            return (
+              wo['Service Number']?.toLowerCase().includes(searchLower) ||
+              wo.Description?.toLowerCase().includes(searchLower) ||
+              wo['Unit Number']?.toLowerCase().includes(searchLower) ||
+              wo['Assigned To']?.toLowerCase().includes(searchLower)
+            );
+          }
+          return true;
+        }).sort((a, b) => {
+          const aVal = a[sortConfig.key] || '';
+          const bVal = b[sortConfig.key] || '';
+          
+          if (sortConfig.key === 'created' || sortConfig.key === 'Started Date') {
+            const aDate = new Date(aVal);
+            const bDate = new Date(bVal);
+            return sortConfig.direction === 'asc' ? aDate - bDate : bDate - aDate;
+          }
+          
+          return sortConfig.direction === 'asc' 
+            ? aVal.localeCompare(bVal)
+            : bVal.localeCompare(aVal);
+        });
+      }, [workOrders, workOrderFilters, sortConfig]);
+
+      const handleSort = (key) => {
+        setSortConfig({
+          key,
+          direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
         });
       };
 
-      if (isLoading) {
-        return (
-          <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ background: 'white', borderRadius: '20px', padding: '3rem', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-              <div style={{ width: '50px', height: '50px', border: '4px solid #e2e8f0', borderTopColor: '#667eea', borderRadius: '50%', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }}></div>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '1.1rem' }}>Loading schedules...</p>
-            </div>
-          </div>
-        );
-      }
+      const getStatusColor = (status) => {
+        switch (status?.toLowerCase()) {
+          case 'closed': return '#10b981';
+          case 'in progress': return '#3b82f6';
+          case 'to be started': return '#f59e0b';
+          default: return '#6b7280';
+        }
+      };
+
+      const getCategoryColor = (category) => {
+        const colors = {
+          'Electrical': '#eab308',
+          'HVAC': '#3b82f6',
+          'Plumbing': '#06b6d4',
+          'Appliances': '#a855f7',
+          'Doors/Windows': '#6366f1',
+          'Building Access': '#ec4899',
+          'Emergency': '#ef4444',
+          'Interior/Cosmetic': '#6b7280',
+          'Common Areas': '#14b8a6',
+          'Tenant Complaints': '#f97316'
+        };
+        return colors[category] || '#6b7280';
+      };
 
       return (
-        <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '2rem', fontFamily: "'DM Sans', sans-serif" }}>
-          {/* Header */}
-          <div style={{ maxWidth: '1400px', margin: '0 auto 2rem' }}>
-            <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2rem 2.5rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', position: 'relative' }}>
-              <div style={{ position: 'absolute', top: '2rem', right: '2.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '20px', background: isOnline ? '#dcfce7' : '#fee2e2', color: isOnline ? '#16a34a' : '#dc2626', fontSize: '0.85rem', fontWeight: '600' }}>
-                ● {isOnline ? 'Connected' : 'Offline'}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-                <Calendar size={32} color="#667eea" />
-                <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: '700', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  Contractor Schedule Manager
-                </h1>
-              </div>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '0.95rem' }}>Akoya Living - 55 Broadway Avenue</p>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div style={{ maxWidth: '1400px', margin: '0 auto 1.5rem' }}>
-            <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '16px', padding: '0.5rem', display: 'inline-flex', gap: '0.5rem', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
-              <button onClick={() => setActiveTab('schedule')} style={{ padding: '0.75rem 2rem', border: 'none', borderRadius: '12px', fontSize: '0.95rem', fontWeight: '600', cursor: 'pointer', background: activeTab === 'schedule' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent', color: activeTab === 'schedule' ? 'white' : '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Plus size={18} /> Schedule Contractor
-              </button>
-              <button onClick={() => setActiveTab('calendar')} style={{ padding: '0.75rem 2rem', border: 'none', borderRadius: '12px', fontSize: '0.95rem', fontWeight: '600', cursor: 'pointer', background: activeTab === 'calendar' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent', color: activeTab === 'calendar' ? 'white' : '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Calendar size={18} /> View Calendar
-              </button>
-            </div>
-          </div>
-
-          {/* Content */}
+        <div style={{ minHeight: '100vh', padding: '2rem' }}>
           <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-            {activeTab === 'schedule' ? (
-              <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2.5rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
-                <h2 style={{ marginTop: 0, marginBottom: '2rem', fontSize: '1.5rem', fontWeight: '700', color: '#1e293b' }}>Add New Schedule</h2>
-                <form onSubmit={handleSubmit}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                    <div>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>
-                        <User size={16} /> Contractor Name
-                      </label>
-                      <input type="text" required value={formData.contractorName} onChange={e => setFormData({...formData, contractorName: e.target.value})} placeholder="Enter contractor name" style={{ width: '100%', padding: '0.875rem 1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>
-                        <Building size={16} /> Location Type
-                      </label>
-                      <select value={formData.locationType} onChange={e => setFormData({...formData, locationType: e.target.value})} style={{ width: '100%', padding: '0.875rem 1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem', cursor: 'pointer' }}>
-                        <option value="unit">Specific Unit(s)</option>
-                        <option value="building">Entire Building</option>
-                      </select>
-                    </div>
-                    {formData.locationType === 'unit' && (
-                      <div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>
-                          <Building size={16} /> Unit Number(s)
-                        </label>
-                        <input type="text" required value={formData.unitNumbers} onChange={e => setFormData({...formData, unitNumbers: e.target.value})} placeholder="e.g., 1804 or 201, 301, 401" style={{ width: '100%', padding: '0.875rem 1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem' }} />
-                      </div>
-                    )}
-                    <div>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>
-                        <Calendar size={16} /> Date
-                      </label>
-                      <input type="date" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} style={{ width: '100%', padding: '0.875rem 1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>
-                        <Clock size={16} /> From Time
-                      </label>
-                      <input type="time" required value={formData.fromTime} onChange={e => setFormData({...formData, fromTime: e.target.value})} style={{ width: '100%', padding: '0.875rem 1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>
-                        <Clock size={16} /> To Time
-                      </label>
-                      <input type="time" required value={formData.toTime} onChange={e => setFormData({...formData, toTime: e.target.value})} style={{ width: '100%', padding: '0.875rem 1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem' }} />
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: '2rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#475569' }}>Additional Notes</label>
-                    <textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Any special instructions..." rows={4} style={{ width: '100%', padding: '1rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '0.95rem', fontFamily: 'inherit', resize: 'vertical' }} />
-                  </div>
-                  <button type="submit" disabled={!isOnline} style={{ padding: '1rem 2.5rem', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: '600', cursor: isOnline ? 'pointer' : 'not-allowed', background: isOnline ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#94a3b8', color: 'white', boxShadow: isOnline ? '0 10px 30px rgba(102,126,234,0.4)' : 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: isOnline ? 1 : 0.6 }}>
-                    <Plus size={20} /> {isOnline ? 'Add Schedule' : 'Offline - Cannot Add'}
-                  </button>
-                </form>
-              </div>
-            ) : (
-              <div>
-                {/* Calendar Controls */}
-                <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: '16px', padding: '1rem', marginBottom: '1.5rem', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div style={{ display: 'flex', gap: '0.5rem', background: '#f8fafc', padding: '0.25rem', borderRadius: '10px' }}>
-                    {['daily', 'weekly', 'monthly'].map(view => (
-                      <button key={view} onClick={() => setCalendarView(view)} style={{ padding: '0.625rem 1.25rem', border: 'none', borderRadius: '8px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', background: calendarView === view ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent', color: calendarView === view ? 'white' : '#64748b', textTransform: 'capitalize' }}>
-                        {view}
-                      </button>
-                    ))}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <button onClick={() => {
-                      const newDate = new Date(currentDate);
-                      if (calendarView === 'daily') newDate.setDate(newDate.getDate() - 1);
-                      else if (calendarView === 'weekly') newDate.setDate(newDate.getDate() - 7);
-                      else newDate.setMonth(newDate.getMonth() - 1);
-                      setCurrentDate(newDate);
-                    }} style={{ padding: '0.5rem', border: 'none', borderRadius: '8px', background: '#f8fafc', cursor: 'pointer', display: 'flex' }}>
-                      <ChevronLeft size={20} />
-                    </button>
-                    <div style={{ fontSize: '1rem', fontWeight: '600', color: '#1e293b', minWidth: '180px', textAlign: 'center' }}>
-                      {calendarView === 'monthly' ? currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) :
-                       calendarView === 'weekly' ? `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` :
-                       currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                    </div>
-                    <button onClick={() => {
-                      const newDate = new Date(currentDate);
-                      if (calendarView === 'daily') newDate.setDate(newDate.getDate() + 1);
-                      else if (calendarView === 'weekly') newDate.setDate(newDate.getDate() + 7);
-                      else newDate.setMonth(newDate.getMonth() + 1);
-                      setCurrentDate(newDate);
-                    }} style={{ padding: '0.5rem', border: 'none', borderRadius: '8px', background: '#f8fafc', cursor: 'pointer', display: 'flex' }}>
-                      <ChevronRight size={20} />
-                    </button>
-                    <button onClick={() => setCurrentDate(new Date())} style={{ padding: '0.625rem 1.25rem', border: '2px solid #667eea', borderRadius: '8px', background: 'white', color: '#667eea', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer' }}>
-                      Today
-                    </button>
-                  </div>
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '3rem', color: 'white' }}>
+              <h1 style={{ fontSize: '2.5rem', fontWeight: '700', margin: '0 0 0.5rem 0' }}>Akoya Contractor Management</h1>
+              <p style={{ fontSize: '1.1rem', opacity: 0.9, margin: 0 }}>Schedule, Track & Manage</p>
+              {!isOnline && <div style={{ background: '#ef4444', padding: '0.75rem', borderRadius: '8px', marginTop: '1rem', fontWeight: '600' }}>⚠️ Offline Mode - Changes will sync when online</div>}
+            </div>
+
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={() => setActiveTab('schedule')} style={{ padding: '1rem 2rem', border: 'none', borderRadius: '12px', background: activeTab === 'schedule' ? 'white' : 'rgba(255,255,255,0.2)', color: activeTab === 'schedule' ? '#667eea' : 'white', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.3s' }}>
+                <Calendar size={20} />
+                Schedule
+              </button>
+              <button onClick={() => setActiveTab('signin')} style={{ padding: '1rem 2rem', border: 'none', borderRadius: '12px', background: activeTab === 'signin' ? 'white' : 'rgba(255,255,255,0.2)', color: activeTab === 'signin' ? '#667eea' : 'white', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.3s' }}>
+                <LogIn size={20} />
+                Sign-In Sheet
+              </button>
+              <button onClick={() => setActiveTab('workorders')} style={{ padding: '1rem 2rem', border: 'none', borderRadius: '12px', background: activeTab === 'workorders' ? 'white' : 'rgba(255,255,255,0.2)', color: activeTab === 'workorders' ? '#667eea' : 'white', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.3s' }}>
+                <FileText size={20} />
+                Work Orders
+              </button>
+            </div>
+
+            {/* Content */}
+            <div style={{ animation: 'slideIn 0.5s ease' }}>
+              {isLoading && activeTab === 'schedule' ? (
+                <div style={{ textAlign: 'center', padding: '4rem', color: 'white' }}>
+                  <div style={{ width: '48px', height: '48px', border: '4px solid rgba(255,255,255,0.3)', borderTop: '4px solid white', borderRadius: '50%', margin: '0 auto', animation: 'spin 1s linear infinite' }} />
+                  <p style={{ marginTop: '1rem', fontSize: '1.1rem' }}>Loading schedules...</p>
                 </div>
-
-                {/* Calendar Views */}
-                <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', minHeight: '600px' }}>
-                  {calendarView === 'daily' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      {getSchedulesForDate(currentDate).length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '4rem 2rem', color: '#94a3b8', fontSize: '1.1rem' }}>
-                          <Calendar size={48} color="#94a3b8" style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
-                          <p style={{ margin: 0 }}>No contractors scheduled for this day</p>
+              ) : activeTab === 'schedule' ? (
+                <div>
+                  {/* Schedule Form */}
+                  <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', marginBottom: '2rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1e293b', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Calendar size={24} color="#667eea" />
+                      Add New Schedule
+                    </h2>
+                    <form onSubmit={handleScheduleSubmit}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>
+                            <User size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                            Contractor Name
+                          </label>
+                          <input required type="text" value={formData.contractorName} onChange={(e) => setFormData({...formData, contractorName: e.target.value})} placeholder="Enter contractor name" style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem', transition: 'all 0.2s' }} />
                         </div>
-                      ) : (
-                        getSchedulesForDate(currentDate).map(schedule => (
-                          <div key={schedule.id} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '16px', padding: '1.5rem', color: 'white', position: 'relative', boxShadow: '0 10px 30px rgba(102,126,234,0.3)', animation: 'slideIn 0.3s ease' }}>
-                            <button onClick={() => deleteSchedule(schedule.id)} disabled={!isOnline} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', padding: '0.5rem', cursor: isOnline ? 'pointer' : 'not-allowed', display: 'flex', opacity: isOnline ? 1 : 0.5 }}>
-                              <X size={16} color="white" />
-                            </button>
-                            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem' }}>{schedule.contractorName}</h3>
-                            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-                              <div>
-                                <div style={{ opacity: 0.8, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Time</div>
-                                <div style={{ fontSize: '1rem', fontWeight: '600' }}>{formatTime(schedule.fromTime)} - {formatTime(schedule.toTime)}</div>
-                              </div>
-                              <div>
-                                <div style={{ opacity: 0.8, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Location</div>
-                                <div style={{ fontSize: '1rem', fontWeight: '600' }}>{schedule.locationType === 'building' ? 'Entire Building' : `Unit ${schedule.unitNumbers}`}</div>
-                              </div>
-                            </div>
-                            {schedule.notes && (
-                              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
-                                <div style={{ opacity: 0.8, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Notes</div>
-                                <div style={{ fontSize: '0.95rem' }}>{schedule.notes}</div>
-                              </div>
-                            )}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>
+                            <Building size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                            Location Type
+                          </label>
+                          <select value={formData.locationType} onChange={(e) => setFormData({...formData, locationType: e.target.value})} style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem' }}>
+                            <option value="unit">Specific Unit(s)</option>
+                            <option value="building">Entire Building</option>
+                          </select>
+                        </div>
+                        {formData.locationType === 'unit' && (
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>Unit Number(s)</label>
+                            <input required type="text" value={formData.unitNumbers} onChange={(e) => setFormData({...formData, unitNumbers: e.target.value})} placeholder="e.g., 101, 102-105" style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem' }} />
                           </div>
-                        ))
-                      )}
-                    </div>
-                  )}
+                        )}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>Date</label>
+                          <input required type="date" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>From Time</label>
+                          <input required type="time" value={formData.fromTime} onChange={(e) => setFormData({...formData, fromTime: e.target.value})} style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>To Time</label>
+                          <input required type="time" value={formData.toTime} onChange={(e) => setFormData({...formData, toTime: e.target.value})} style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem' }} />
+                        </div>
+                      </div>
+                      <div style={{ marginTop: '1.5rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>Notes (Optional)</label>
+                        <textarea value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} placeholder="Additional details..." rows="3" style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem', resize: 'vertical' }} />
+                      </div>
+                      <button type="submit" disabled={!isOnline} style={{ marginTop: '1.5rem', width: '100%', padding: '1rem', border: 'none', borderRadius: '12px', background: isOnline ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#94a3b8', color: 'white', fontSize: '1rem', fontWeight: '600', cursor: isOnline ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s' }}>
+                        <Plus size={20} />
+                        Add Schedule
+                      </button>
+                    </form>
+                  </div>
 
-                  {calendarView === 'weekly' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1rem' }}>
-                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                        <div key={day} style={{ textAlign: 'center', fontWeight: '700', color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{day}</div>
-                      ))}
-                      {getWeekDays(currentDate).map((date, idx) => {
-                        const daySchedules = getSchedulesForDate(date);
-                        const isToday = date.toDateString() === new Date().toDateString();
-                        return (
-                          <div key={idx} style={{ background: isToday ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f8fafc', borderRadius: '12px', padding: '1rem', minHeight: '120px', color: isToday ? 'white' : '#1e293b' }}>
-                            <div style={{ fontWeight: '700', marginBottom: '0.75rem', fontSize: '1.1rem' }}>{date.getDate()}</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                              {daySchedules.slice(0, 2).map(schedule => (
-                                <div key={schedule.id} style={{ background: isToday ? 'rgba(255,255,255,0.2)' : 'white', padding: '0.5rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', border: isToday ? 'none' : '2px solid #e2e8f0' }}>
-                                  {schedule.contractorName}
-                                </div>
-                              ))}
-                              {daySchedules.length > 2 && (
-                                <div style={{ fontSize: '0.75rem', fontWeight: '600', opacity: 0.7 }}>+{daySchedules.length - 2} more</div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {calendarView === 'monthly' && (
-                    <div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                          <div key={day} style={{ textAlign: 'center', fontWeight: '700', color: '#64748b', fontSize: '0.85rem', padding: '0.5rem' }}>{day}</div>
+                  {/* Schedule Calendar */}
+                  <div>
+                    <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {['daily', 'weekly', 'monthly'].map(view => (
+                          <button key={view} onClick={() => setCalendarView(view)} style={{ padding: '0.625rem 1.25rem', border: calendarView === view ? '2px solid #667eea' : '2px solid #e2e8f0', borderRadius: '8px', background: calendarView === view ? '#667eea' : 'white', color: calendarView === view ? 'white' : '#64748b', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', textTransform: 'capitalize' }}>
+                            {view}
+                          </button>
                         ))}
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem' }}>
-                        {(() => {
-                          const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(currentDate);
-                          const days = [];
-                          for (let i = 0; i < startingDayOfWeek; i++) days.push(<div key={`empty-${i}`} />);
-                          for (let day = 1; day <= daysInMonth; day++) {
-                            const date = new Date(year, month, day);
-                            const daySchedules = getSchedulesForDate(date);
-                            const isToday = date.toDateString() === new Date().toDateString();
-                            days.push(
-                              <div key={day} onClick={() => { if (daySchedules.length > 0) { setCurrentDate(date); setCalendarView('daily'); } }} style={{ background: isToday ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f8fafc', borderRadius: '12px', padding: '0.75rem', minHeight: '80px', color: isToday ? 'white' : '#1e293b', cursor: daySchedules.length > 0 ? 'pointer' : 'default' }}>
-                                <div style={{ fontWeight: '700', marginBottom: '0.5rem' }}>{day}</div>
-                                {daySchedules.length > 0 && (
-                                  <div style={{ background: isToday ? 'rgba(255,255,255,0.3)' : '#667eea', color: 'white', borderRadius: '6px', padding: '0.25rem 0.5rem', fontSize: '0.7rem', fontWeight: '600', textAlign: 'center' }}>
-                                    {daySchedules.length} {daySchedules.length === 1 ? 'schedule' : 'schedules'}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <button onClick={() => {
+                          const newDate = new Date(currentDate);
+                          if (calendarView === 'daily') newDate.setDate(newDate.getDate() - 1);
+                          else if (calendarView === 'weekly') newDate.setDate(newDate.getDate() - 7);
+                          else newDate.setMonth(newDate.getMonth() - 1);
+                          setCurrentDate(newDate);
+                        }} style={{ padding: '0.5rem', border: 'none', borderRadius: '8px', background: '#f8fafc', cursor: 'pointer', display: 'flex' }}>
+                          <ChevronLeft size={20} />
+                        </button>
+                        <div style={{ fontSize: '1rem', fontWeight: '600', color: '#1e293b', minWidth: '180px', textAlign: 'center' }}>
+                          {calendarView === 'monthly' ? currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) :
+                           calendarView === 'weekly' ? `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` :
+                           currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                        </div>
+                        <button onClick={() => {
+                          const newDate = new Date(currentDate);
+                          if (calendarView === 'daily') newDate.setDate(newDate.getDate() + 1);
+                          else if (calendarView === 'weekly') newDate.setDate(newDate.getDate() + 7);
+                          else newDate.setMonth(newDate.getMonth() + 1);
+                          setCurrentDate(newDate);
+                        }} style={{ padding: '0.5rem', border: 'none', borderRadius: '8px', background: '#f8fafc', cursor: 'pointer', display: 'flex' }}>
+                          <ChevronRight size={20} />
+                        </button>
+                        <button onClick={() => setCurrentDate(new Date())} style={{ padding: '0.625rem 1.25rem', border: '2px solid #667eea', borderRadius: '8px', background: 'white', color: '#667eea', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer' }}>
+                          Today
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Calendar Views */}
+                    <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', minHeight: '600px' }}>
+                      {calendarView === 'daily' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          {getSchedulesForDate(currentDate).length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '4rem 2rem', color: '#94a3b8', fontSize: '1.1rem' }}>
+                              <Calendar size={48} color="#94a3b8" style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
+                              <p style={{ margin: 0 }}>No contractors scheduled for this day</p>
+                            </div>
+                          ) : (
+                            getSchedulesForDate(currentDate).map(schedule => (
+                              <div key={schedule.id} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '16px', padding: '1.5rem', color: 'white', position: 'relative', boxShadow: '0 10px 30px rgba(102,126,234,0.3)', animation: 'slideIn 0.3s ease' }}>
+                                <button onClick={() => deleteSchedule(schedule.id)} disabled={!isOnline} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', padding: '0.5rem', cursor: isOnline ? 'pointer' : 'not-allowed', display: 'flex', opacity: isOnline ? 1 : 0.5 }}>
+                                  <X size={16} color="white" />
+                                </button>
+                                <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem' }}>{schedule.contractorName}</h3>
+                                <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                                  <div>
+                                    <div style={{ opacity: 0.8, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Time</div>
+                                    <div style={{ fontSize: '1rem', fontWeight: '600' }}>{formatTime(schedule.fromTime)} - {formatTime(schedule.toTime)}</div>
+                                  </div>
+                                  <div>
+                                    <div style={{ opacity: 0.8, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Location</div>
+                                    <div style={{ fontSize: '1rem', fontWeight: '600' }}>{schedule.locationType === 'building' ? 'Entire Building' : `Unit ${schedule.unitNumbers}`}</div>
+                                  </div>
+                                </div>
+                                {schedule.notes && (
+                                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
+                                    <div style={{ opacity: 0.8, fontSize: '0.85rem', marginBottom: '0.25rem' }}>Notes</div>
+                                    <div style={{ fontSize: '0.95rem' }}>{schedule.notes}</div>
                                   </div>
                                 )}
                               </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+
+                      {calendarView === 'weekly' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1rem' }}>
+                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                            <div key={day} style={{ textAlign: 'center', fontWeight: '700', color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{day}</div>
+                          ))}
+                          {getWeekDays(currentDate).map((date, idx) => {
+                            const daySchedules = getSchedulesForDate(date);
+                            const isToday = date.toDateString() === new Date().toDateString();
+                            return (
+                              <div key={idx} style={{ background: isToday ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f8fafc', borderRadius: '12px', padding: '1rem', minHeight: '120px', color: isToday ? 'white' : '#1e293b' }}>
+                                <div style={{ fontWeight: '700', marginBottom: '0.75rem', fontSize: '1.1rem' }}>{date.getDate()}</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                  {daySchedules.slice(0, 2).map(schedule => (
+                                    <div key={schedule.id} style={{ background: isToday ? 'rgba(255,255,255,0.2)' : 'white', padding: '0.5rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', border: isToday ? 'none' : '2px solid #e2e8f0' }}>
+                                      {schedule.contractorName}
+                                    </div>
+                                  ))}
+                                  {daySchedules.length > 2 && (
+                                    <div style={{ fontSize: '0.75rem', fontWeight: '600', opacity: 0.7 }}>+{daySchedules.length - 2} more</div>
+                                  )}
+                                </div>
+                              </div>
                             );
-                          }
-                          return days;
-                        })()}
+                          })}
+                        </div>
+                      )}
+
+                      {calendarView === 'monthly' && (
+                        <div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                              <div key={day} style={{ textAlign: 'center', fontWeight: '700', color: '#64748b', fontSize: '0.85rem', padding: '0.5rem' }}>{day}</div>
+                            ))}
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem' }}>
+                            {(() => {
+                              const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(currentDate);
+                              const days = [];
+                              for (let i = 0; i < startingDayOfWeek; i++) days.push(<div key={`empty-${i}`} />);
+                              for (let day = 1; day <= daysInMonth; day++) {
+                                const date = new Date(year, month, day);
+                                const daySchedules = getSchedulesForDate(date);
+                                const isToday = date.toDateString() === new Date().toDateString();
+                                days.push(
+                                  <div key={day} onClick={() => { if (daySchedules.length > 0) { setCurrentDate(date); setCalendarView('daily'); } }} style={{ background: isToday ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f8fafc', borderRadius: '12px', padding: '0.75rem', minHeight: '80px', color: isToday ? 'white' : '#1e293b', cursor: daySchedules.length > 0 ? 'pointer' : 'default' }}>
+                                    <div style={{ fontWeight: '700', marginBottom: '0.5rem' }}>{day}</div>
+                                    {daySchedules.length > 0 && (
+                                      <div style={{ background: isToday ? 'rgba(255,255,255,0.3)' : '#667eea', color: 'white', borderRadius: '6px', padding: '0.25rem 0.5rem', fontSize: '0.7rem', fontWeight: '600', textAlign: 'center' }}>
+                                        {daySchedules.length} {daySchedules.length === 1 ? 'schedule' : 'schedules'}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+                              return days;
+                            })()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : activeTab === 'signin' ? (
+                <div>
+                  {/* Sign-In Form */}
+                  <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', marginBottom: '2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                      <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1e293b', margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <LogIn size={24} color="#667eea" />
+                        Contractor Sign-In/Out
+                      </h2>
+                      <button onClick={exportSignIns} disabled={signIns.length === 0} style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: '10px', background: signIns.length > 0 ? '#10b981' : '#94a3b8', color: 'white', fontSize: '0.875rem', fontWeight: '600', cursor: signIns.length > 0 ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Download size={18} />
+                        Export to Excel
+                      </button>
+                    </div>
+                    <form onSubmit={handleSignInSubmit}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>
+                            <User size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                            Contractor Name
+                          </label>
+                          <input required type="text" value={signInForm.name} onChange={(e) => setSignInForm({...signInForm, name: e.target.value})} placeholder="Enter name" style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>
+                            <Building size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                            Company
+                          </label>
+                          <input required type="text" value={signInForm.company} onChange={(e) => setSignInForm({...signInForm, company: e.target.value})} placeholder="Company name" style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>
+                            <Phone size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                            Phone Number
+                          </label>
+                          <input required type="tel" value={signInForm.phone} onChange={(e) => setSignInForm({...signInForm, phone: e.target.value})} placeholder="(555) 123-4567" style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>Date</label>
+                          <input required type="date" value={signInForm.date} onChange={(e) => setSignInForm({...signInForm, date: e.target.value})} style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>
+                            <LogIn size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                            Check-In Time
+                          </label>
+                          <input required type="time" value={signInForm.checkInTime} onChange={(e) => setSignInForm({...signInForm, checkInTime: e.target.value})} style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>
+                            <LogOut size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                            Check-Out Time (Optional)
+                          </label>
+                          <input type="time" value={signInForm.checkOutTime} onChange={(e) => setSignInForm({...signInForm, checkOutTime: e.target.value})} style={{ width: '100%', padding: '0.875rem', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem' }} />
+                        </div>
+                      </div>
+                      <button type="submit" disabled={!isOnline} style={{ marginTop: '1.5rem', width: '100%', padding: '1rem', border: 'none', borderRadius: '12px', background: isOnline ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#94a3b8', color: 'white', fontSize: '1rem', fontWeight: '600', cursor: isOnline ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                        <Plus size={20} />
+                        Add Sign-In Record
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* Sign-In List */}
+                  <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b', marginBottom: '1.5rem' }}>Recent Sign-Ins</h3>
+                    {signIns.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '4rem 2rem', color: '#94a3b8' }}>
+                        <LogIn size={48} color="#94a3b8" style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
+                        <p style={{ margin: 0, fontSize: '1.1rem' }}>No sign-in records yet</p>
+                      </div>
+                    ) : (
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
+                              <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Name</th>
+                              <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Company</th>
+                              <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Phone</th>
+                              <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Date</th>
+                              <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Check-In</th>
+                              <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Check-Out</th>
+                              <th style={{ padding: '1rem', textAlign: 'center', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {signIns.map((signIn, idx) => (
+                              <tr key={signIn.id} style={{ borderBottom: '1px solid #f1f5f9', animation: 'slideIn 0.3s ease' }}>
+                                <td style={{ padding: '1rem', fontSize: '0.95rem', color: '#1e293b', fontWeight: '600' }}>{signIn.name}</td>
+                                <td style={{ padding: '1rem', fontSize: '0.95rem', color: '#475569' }}>{signIn.company}</td>
+                                <td style={{ padding: '1rem', fontSize: '0.95rem', color: '#475569' }}>{signIn.phone}</td>
+                                <td style={{ padding: '1rem', fontSize: '0.95rem', color: '#475569' }}>{new Date(signIn.date).toLocaleDateString()}</td>
+                                <td style={{ padding: '1rem', fontSize: '0.95rem', color: '#10b981', fontWeight: '600' }}>{formatTime(signIn.checkInTime)}</td>
+                                <td style={{ padding: '1rem', fontSize: '0.95rem', color: signIn.checkOutTime ? '#ef4444' : '#94a3b8', fontWeight: '600' }}>
+                                  {signIn.checkOutTime ? formatTime(signIn.checkOutTime) : 'On-site'}
+                                </td>
+                                <td style={{ padding: '1rem', textAlign: 'center' }}>
+                                  <button onClick={() => deleteSignIn(signIn.id)} disabled={!isOnline} style={{ padding: '0.5rem', border: 'none', borderRadius: '8px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', cursor: isOnline ? 'pointer' : 'not-allowed', display: 'inline-flex', opacity: isOnline ? 1 : 0.5 }}>
+                                    <X size={16} />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {/* Work Orders Header */}
+                  <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', marginBottom: '2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                      <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1e293b', margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <FileText size={24} color="#667eea" />
+                        Work Orders Management
+                      </h2>
+                      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                        <label style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: '10px', background: '#667eea', color: 'white', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Upload size={18} />
+                          Import CSV
+                          <input type="file" accept=".csv" onChange={handleWorkOrdersUpload} style={{ display: 'none' }} />
+                        </label>
+                        <button onClick={exportWorkOrders} disabled={workOrders.length === 0} style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: '10px', background: workOrders.length > 0 ? '#10b981' : '#94a3b8', color: 'white', fontSize: '0.875rem', fontWeight: '600', cursor: workOrders.length > 0 ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Download size={18} />
+                          Export to Excel
+                        </button>
                       </div>
                     </div>
-                  )}
+
+                    {/* Filters */}
+                    {workOrders.length > 0 && (
+                      <div style={{ marginTop: '1.5rem' }}>
+                        <button onClick={() => setShowFilters(!showFilters)} style={{ padding: '0.75rem 1.25rem', border: '2px solid #e2e8f0', borderRadius: '10px', background: 'white', color: '#64748b', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Filter size={18} />
+                          {showFilters ? 'Hide Filters' : 'Show Filters'}
+                          {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                        {showFilters && (
+                          <div style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', animation: 'slideIn 0.3s ease' }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>Status</label>
+                              <select value={workOrderFilters.status} onChange={(e) => setWorkOrderFilters({...workOrderFilters, status: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem' }}>
+                                <option value="all">All Statuses</option>
+                                {uniqueStatuses.map(status => (
+                                  <option key={status} value={status}>{status}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>Category</label>
+                              <select value={workOrderFilters.category} onChange={(e) => setWorkOrderFilters({...workOrderFilters, category: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem' }}>
+                                <option value="all">All Categories</option>
+                                {uniqueCategories.map(cat => (
+                                  <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>Unit Number</label>
+                              <input type="text" value={workOrderFilters.unit} onChange={(e) => setWorkOrderFilters({...workOrderFilters, unit: e.target.value})} placeholder="Filter by unit" style={{ width: '100%', padding: '0.75rem', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem' }} />
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>Search</label>
+                              <div style={{ position: 'relative' }}>
+                                <Search size={18} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                <input type="text" value={workOrderFilters.search} onChange={(e) => setWorkOrderFilters({...workOrderFilters, search: e.target.value})} placeholder="Search..." style={{ width: '100%', padding: '0.75rem 0.75rem 0.75rem 2.5rem', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem' }} />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Work Orders Table */}
+                  <div style={{ background: 'rgba(255,255,255,0.98)', borderRadius: '20px', padding: '2rem', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+                    {workOrders.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '4rem 2rem', color: '#94a3b8' }}>
+                        <FileText size={48} color="#94a3b8" style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1e293b', marginBottom: '0.5rem' }}>No work orders loaded</h3>
+                        <p style={{ margin: 0, fontSize: '1rem' }}>Import a CSV file to get started</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#64748b', fontWeight: '600' }}>
+                          Showing {filteredWorkOrders.length} of {workOrders.length} work orders
+                        </div>
+                        <div style={{ overflowX: 'auto' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
+                                <th onClick={() => handleSort('Service Number')} style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none' }}>
+                                  Service # {sortConfig.key === 'Service Number' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                </th>
+                                <th onClick={() => handleSort('Status')} style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none' }}>
+                                  Status {sortConfig.key === 'Status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                </th>
+                                <th onClick={() => handleSort('Category')} style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none' }}>
+                                  Category {sortConfig.key === 'Category' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                </th>
+                                <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Description</th>
+                                <th onClick={() => handleSort('Unit Number')} style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none' }}>
+                                  Unit {sortConfig.key === 'Unit Number' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                </th>
+                                <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Assigned To</th>
+                                <th onClick={() => handleSort('created')} style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none' }}>
+                                  Created {sortConfig.key === 'created' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {filteredWorkOrders.map((wo, idx) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', animation: 'slideIn 0.3s ease' }}>
+                                  <td style={{ padding: '1rem', fontSize: '0.875rem', color: '#1e293b', fontWeight: '600' }}>{wo['Service Number']}</td>
+                                  <td style={{ padding: '1rem' }}>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600', background: getStatusColor(wo.Status) + '20', color: getStatusColor(wo.Status) }}>
+                                      {wo.Status}
+                                    </span>
+                                  </td>
+                                  <td style={{ padding: '1rem' }}>
+                                    <span style={{ display: 'inline-block', padding: '0.375rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '600', background: getCategoryColor(wo.Category) + '20', color: getCategoryColor(wo.Category) }}>
+                                      {wo.Category}
+                                    </span>
+                                  </td>
+                                  <td style={{ padding: '1rem', fontSize: '0.875rem', color: '#475569', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{wo.Description}</td>
+                                  <td style={{ padding: '1rem', fontSize: '0.875rem', color: '#475569', fontWeight: '600' }}>{wo['Unit Number'] || '-'}</td>
+                                  <td style={{ padding: '1rem', fontSize: '0.875rem', color: '#475569' }}>{wo['Assigned To'] || '-'}</td>
+                                  <td style={{ padding: '1rem', fontSize: '0.875rem', color: '#64748b' }}>
+                                    {wo.created ? new Date(wo.created).toLocaleDateString() : '-'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       );
     }
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<ContractorScheduler />);
+    root.render(<ContractorManagement />);
   </script>
 </body>
 </html>
